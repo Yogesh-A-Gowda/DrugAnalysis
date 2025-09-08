@@ -1,0 +1,15 @@
+pandas
+numpy
+requests
+beautifulsoup4
+lxml
+transformers
+torch
+sentencepiece
+scikit-learn
+joblib
+streamlit
+plotly
+pyngrok
+requests
+safetensors
