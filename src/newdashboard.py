@@ -7,7 +7,7 @@ import os
 # -----------------------------
 # Paths
 # -----------------------------
-DATA_PATH = "https://raw.githubusercontent.com/Yogesh-A-Gowda/DrugAnalysis/main/src/data/combined_dataset.csv"
+DATA_PATH = "https://raw.githubusercontent.com/Yogesh-A-Gowda/DrugAnalysis/main/src/data/drug_reviews_with_categories.csv"
 TRUST_SCORES_PATH = "https://raw.githubusercontent.com/Yogesh-A-Gowda/DrugAnalysis/main/src/data/trust_scores.csv"
 
 # Validate files
