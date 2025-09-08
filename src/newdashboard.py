@@ -1,24 +1,13 @@
-# src/dashboard.py
+# src/newdashboard.py
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import os
 
 # -----------------------------
-# Paths
+# Paths (raw GitHub URLs)
 # -----------------------------
-DATA_PATH = "https://raw.githubusercontent.com/Yogesh-A-Gowda/DrugAnalysis/main/src/data/drug_reviews_with_categories.csv"
-TRUST_SCORES_PATH = "https://raw.githubusercontent.com/Yogesh-A-Gowda/DrugAnalysis/main/src/data/trust_scores.csv"
-
-# Validate files
-if not os.path.exists(DATA_PATH):
-    st.error(f"❌ Data file not found: {DATA_PATH}")
-    st.stop()
-
-if not os.path.exists(TRUST_SCORES_PATH):
-    st.warning(f"⚠️ Trust scores file not found: {TRUST_SCORES_PATH}")
-    st.info("Using live computation from reviews.")
-    TRUST_SCORES_PATH = None
+DATA_URL = "https://raw.githubusercontent.com/Yogesh-A-Gowda/DrugAnalysis/main/src/data/drug_reviews_with_categories.csv"
+TRUST_SCORES_URL = "https://raw.githubusercontent.com/Yogesh-A-Gowda/DrugAnalysis/main/src/data/trust_scores.csv"
 
 # -----------------------------
 # Load Data
@@ -26,7 +15,8 @@ if not os.path.exists(TRUST_SCORES_PATH):
 @st.cache_data
 def load_data():
     try:
-        df = pd.read_csv(DATA_PATH)
+        df = pd.read_csv(DATA_URL)
+        # Standardize column names
         if 'drug_review' in df.columns:
             df.rename(columns={'drug_review': 'review_text'}, inplace=True)
         if 'drug_name' not in df.columns:
@@ -41,14 +31,13 @@ def load_data():
 
 @st.cache_data
 def load_trust_scores():
-    if TRUST_SCORES_PATH and os.path.exists(TRUST_SCORES_PATH):
-        trust_df = pd.read_csv(TRUST_SCORES_PATH)
+    try:
+        trust_df = pd.read_csv(TRUST_SCORES_URL)
         trust_df['drug_name'] = trust_df['drug_name'].str.lower().str.strip()
-        # aggregate to avoid duplicates
         trust_df = trust_df.groupby('drug_name', as_index=False)['trust_score'].mean()
         return trust_df.set_index('drug_name')['trust_score']
-    else:
-        # Compute from data
+    except Exception:
+        # If trust scores CSV not found, compute from data
         df = load_data()
         category_scores = {
             "Positive_Experience": +1.0,
@@ -72,28 +61,24 @@ trust_scores = load_trust_scores()
 # -----------------------------
 st.sidebar.header("🔍 Filters")
 
-# Trust Score Filter
 min_trust = st.sidebar.slider("🏆 Min Trust Score", 0.0, 1.0, 0.0, 0.05)
 
-# Filter available drugs
 available_drugs = trust_scores[trust_scores >= min_trust].index.tolist()
 available_drugs = sorted(set(available_drugs) & set(df['drug_name'].unique()))
-available_drugs = sorted(available_drugs)
 
 if not available_drugs:
     st.warning("⚠️ No drugs meet the minimum trust threshold.")
     st.stop()
 
 st.sidebar.markdown(f"**📦 {len(available_drugs)} drugs available**")
-
 selected_drug = st.sidebar.selectbox("💊 Select Drug", available_drugs)
 
-# Age Filter
+# Age filter
 min_age = int(df['age'].min()) if df['age'].notna().any() else 10
 max_age = int(df['age'].max()) if df['age'].notna().any() else 100
 age_range = st.sidebar.slider("📅 Age Range", min_age, max_age, (18, 70))
 
-# Gender Filter
+# Gender filter
 gender_filter = st.sidebar.selectbox("👤 Gender", ["All", "male", "female"])
 
 # -----------------------------
@@ -101,7 +86,6 @@ gender_filter = st.sidebar.selectbox("👤 Gender", ["All", "male", "female"])
 # -----------------------------
 filtered_df = df[df['drug_name'] == selected_drug]
 
-# Age: keep if NaN or in range
 if 'age' in filtered_df.columns:
     age_mask = (
         filtered_df['age'].isna() |
@@ -109,7 +93,6 @@ if 'age' in filtered_df.columns:
     )
     filtered_df = filtered_df[age_mask]
 
-# Gender
 if gender_filter != "All" and 'gender' in filtered_df.columns:
     gender_mask = (
         filtered_df['gender'].isna() |
@@ -124,8 +107,6 @@ st.title("💊 DrugTrust AI Dashboard")
 st.markdown("#### AI-powered insights from real patient reviews")
 
 current_trust = trust_scores.get(selected_drug, 0.0)
-
-# ensure scalar
 if isinstance(current_trust, pd.Series):
     current_trust = current_trust.iloc[0]
 
