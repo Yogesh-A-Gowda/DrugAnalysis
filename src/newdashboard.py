@@ -7,8 +7,8 @@ import os
 # -----------------------------
 # Paths
 # -----------------------------
-DATA_PATH = "https://github.com/Yogesh-A-Gowda/DrugAnalysis/blob/main/src/data/drug_reviews_with_categories.csv"
-TRUST_SCORES_PATH = "https://github.com/Yogesh-A-Gowda/DrugAnalysis/blob/main/src/data/trust_scores.csv"
+DATA_PATH = "https://raw.githubusercontent.com/Yogesh-A-Gowda/DrugAnalysis/main/src/data/combined_dataset.csv"
+TRUST_SCORES_PATH = "https://raw.githubusercontent.com/Yogesh-A-Gowda/DrugAnalysis/main/src/data/trust_scores.csv"
 
 # Validate files
 if not os.path.exists(DATA_PATH):
