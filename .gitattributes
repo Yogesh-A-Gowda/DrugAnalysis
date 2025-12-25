@@ -1,1 +1,0 @@
-models/fine_tuned_distilbert_drug_reviews/model.safetensors filter=lfs diff=lfs merge=lfs -text
