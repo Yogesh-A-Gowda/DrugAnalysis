@@ -10,6 +10,10 @@ export default defineConfig(({ mode }) => {
       react(), 
       tailwindcss() // Local Tailwind activation
     ],
+    preview: {
+    host: '0.0.0.0',
+    allowedHosts: ['druganalysis-y0wn.onrender.com']
+  },
     define: {
       'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY) //
     },
