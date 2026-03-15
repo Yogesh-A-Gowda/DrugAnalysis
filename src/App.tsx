@@ -4,6 +4,7 @@ import { type DrugAnalysis, type Filters } from './types';
 import { fetchDrugList, fetchDrugAnalysis } from './services/drugService';
 import { ReviewChart } from './components/ReviewChart';
 import { ChatBot } from './components/ChatBot';
+import { LandingPage } from './components/LandingPage';
 
 const App: React.FC = () => {
   const [drugList, setDrugList] = useState<string[]>([]);
@@ -15,6 +16,7 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const [filters, setFilters] = useState<Filters>({
     categories: [],
@@ -128,6 +130,7 @@ const App: React.FC = () => {
             <div className="relative w-full" ref={dropdownRef}>
               <div className="relative cursor-text" onClick={() => setIsDropdownOpen(true)}>
                 <input
+                  ref={searchInputRef}
                   type="text"
                   placeholder="Search drug..."
                   value={isDropdownOpen ? searchTerm : selectedDrug}
@@ -268,7 +271,7 @@ const App: React.FC = () => {
             <ChatBot drugData={data}/>
           </div>
         ) : (
-          <div className="h-full flex flex-col items-center justify-center opacity-40"><Pill size={64} className="mb-4 text-slate-300" /><p className="font-medium text-slate-500 text-lg">Select a medication to begin AI analysis</p></div>
+          <LandingPage drugCount={drugList.length} onSearchClick={() => { setIsDropdownOpen(true); searchInputRef.current?.focus(); }} />
         )}
       </main>
     </div>
