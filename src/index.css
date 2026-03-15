@@ -1,0 +1,12 @@
+@import "tailwindcss"; /* The v4 way to load all styles */
+
+/* Add this to match your sidebar's custom scrollbar logic */
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 10px;
+  }
+}
