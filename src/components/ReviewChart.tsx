@@ -8,7 +8,7 @@ interface ReviewChartProps {
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4'];
 
 export const ReviewChart: React.FC<ReviewChartProps> = ({ data }) => {
-  const chartData = (Object.entries(data) as [string, number][])
+  const chartData = (Object.entries(data) as [string, number][]) 
     .filter(([, count]) => count > 0)
     .map(([name, value]) => ({ name: name.replace(/_/g, ' '), value }))
     .sort((a, b) => b.value - a.value);
@@ -18,16 +18,30 @@ export const ReviewChart: React.FC<ReviewChartProps> = ({ data }) => {
   }
 
   return (
-    <div className="w-full h-80">
+    <div className="w-full h-64 md:h-80">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
-          <Pie data={chartData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value">
+          <Pie
+            data={chartData}
+            cx="50%"
+            cy="50%"
+            innerRadius={45}
+            outerRadius={75}
+            paddingAngle={5}
+            dataKey="value"
+          >
             {chartData.map((_, index) => (
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>
-          <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-          <Legend verticalAlign="bottom" height={36}/>
+          <Tooltip
+            contentStyle={{
+              borderRadius: '8px',
+              border: 'none',
+              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+            }}
+          />
+          <Legend verticalAlign="bottom" height={36} />
         </PieChart>
       </ResponsiveContainer>
     </div>

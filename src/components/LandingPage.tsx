@@ -1,157 +1,140 @@
-import React from 'react';
-import { Pill, Search, BarChart3, MessageSquare, SlidersHorizontal, ArrowRight, Shield, Brain, Activity } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Send, Bot, User, Loader2, X, MessageSquare } from 'lucide-react';
+import { type ChatMessage, type DrugAnalysis } from '../types';
+import { getGeminiResponse } from '../services/geminiService';
 
-interface LandingPageProps {
-  drugCount: number;
-  onSearchClick: () => void;
+interface ChatBotProps {
+  drugData: DrugAnalysis;
 }
 
-const CATEGORIES = [
-  { label: 'Positive Experience', color: '#10b981', icon: '✅' },
-  { label: 'Mixed Feedback', color: '#f59e0b', icon: '🔄' },
-  { label: 'Ineffective', color: '#9E9E9E', icon: '🚫' },
-  { label: 'Dosage Issues', color: '#3b82f6', icon: '⚖️' },
-  { label: 'Severe Side Effects', color: '#ef4444', icon: '⚠️' },
-  { label: 'Dependency / Addiction', color: '#8b5cf6', icon: '🧠' },
-];
+export const ChatBot: React.FC<ChatBotProps> = ({ drugData }) => {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-const FEATURES = [
-  {
-    icon: Brain,
-    title: 'AI Classification',
-    description: 'BERT-powered sentiment analysis classifies every review into 6 actionable categories.',
-    gradient: 'from-blue-500 to-indigo-600',
-  },
-  {
-    icon: Shield,
-    title: 'Trust Scores',
-    description: 'Composite trust scores weighted by review sentiment give a single reliability metric.',
-    gradient: 'from-emerald-500 to-teal-600',
-  },
-  {
-    icon: MessageSquare,
-    title: 'AI Chat Assistant',
-    description: 'Ask Gemini questions about any drug — it synthesizes insights from real patient reviews.',
-    gradient: 'from-violet-500 to-purple-600',
-  },
-  {
-    icon: SlidersHorizontal,
-    title: 'Advanced Filters',
-    description: 'Slice reviews by age, gender, and sentiment category to find exactly what matters to you.',
-    gradient: 'from-amber-500 to-orange-600',
-  },
-];
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
 
-const STEPS = [
-  { step: '01', label: 'Search', desc: 'Find a medication in the sidebar', icon: Search },
-  { step: '02', label: 'Analyze', desc: 'View trust score & review breakdown', icon: BarChart3 },
-  { step: '03', label: 'Chat', desc: 'Ask the AI for deeper insights', icon: MessageSquare },
-];
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
 
-export const LandingPage: React.FC<LandingPageProps> = ({ drugCount, onSearchClick }) => {
+    const userMsg = input.trim();
+    setInput('');
+    setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
+    setIsLoading(true);
+
+    try {
+      const response = await getGeminiResponse(userMsg, messages, drugData);
+      setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+    } catch (err) {
+      setMessages(prev => [...prev, { role: 'assistant', content: 'Error: Could not get a response.' }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="max-w-5xl mx-auto space-y-16 pb-20">
-
-        {/* ── Hero Section ── */}
-        <section className="relative pt-16 pb-12 text-center">
-          {/* Background glow */}
-          <div className="absolute inset-0 -z-10 overflow-hidden">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent blur-3xl" />
-          </div>
-
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/25 mb-8 animate-[bounce_3s_ease-in-out_infinite]">
-            <Pill className="text-white" size={36} />
-          </div>
-
-          <h1 className="text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
-            Drug<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Insight</span> AI
-          </h1>
-          <p className="mt-4 text-lg text-slate-500 max-w-xl mx-auto leading-relaxed">
-            AI-powered drug review analysis — instantly classify patient feedback, 
-            compute trust scores, and uncover hidden sentiment patterns.
-          </p>
-
-          <div className="mt-8 flex items-center justify-center gap-4">
+    <div className="fixed bottom-4 right-3 z-50 flex flex-col items-end md:bottom-6 md:right-6">
+      {isOpen ? (
+        <div className="bg-white w-[calc(100vw-1.5rem)] max-w-md h-[70vh] max-h-[500px] shadow-2xl rounded-2xl flex flex-col border border-slate-200 overflow-hidden mb-2 md:w-96 md:h-[500px] md:mb-4 transition-all duration-300">
+          <div className="bg-blue-600 p-3 md:p-4 text-white flex justify-between items-center shrink-0">
+            <div className="flex items-center gap-2">
+              <Bot size={20} />
+              <div>
+                <h3 className="font-semibold text-sm">Drug Analysis AI</h3>
+                <p className="text-xs text-blue-100">Analyzing {drugData.drug_name}</p>
+              </div>
+            </div>
             <button
-              onClick={onSearchClick}
-              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold shadow-lg shadow-blue-500/25 hover:shadow-xl hover:scale-105 transition-all duration-200 cursor-pointer"
+              onClick={() => setIsOpen(false)}
+              className="hover:bg-blue-700 p-1 rounded transition-colors"
             >
-              <Search size={16} />
-              Select a medication to begin
-              <ArrowRight size={16} />
+              <X size={20} />
             </button>
           </div>
 
-          {/* Stat pill */}
-          <div className="mt-10 inline-flex items-center gap-3 px-6 py-3 rounded-full bg-white border border-slate-200 shadow-sm">
-            <Activity size={16} className="text-blue-500" />
-            <span className="text-sm font-semibold text-slate-700">
-              <span className="text-2xl font-black text-blue-600">{drugCount}</span> medications available for analysis
-            </span>
-          </div>
-        </section>
-
-        {/* ── Feature Cards ── */}
-        <section>
-          <h2 className="text-center text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-8">Platform Capabilities</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {FEATURES.map((f) => (
-              <div
-                key={f.title}
-                className="group relative bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 transition-all duration-300"
-              >
-                <div className={`inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br ${f.gradient} shadow-sm mb-4`}>
-                  <f.icon size={20} className="text-white" />
+          <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 md:p-4 space-y-4 bg-slate-50">
+            {messages.length === 0 && (
+              <div className="text-center py-10 text-slate-400 space-y-2">
+                <Bot className="mx-auto text-blue-200" size={40} />
+                <p className="text-sm">Ask me anything about {drugData.drug_name}!</p>
+                <div className="flex flex-wrap gap-2 justify-center mt-4">
+                  {['Side effects?', 'Is it effective?', 'Common patient concerns?'].map(q => (
+                    <button
+                      key={q}
+                      onClick={() => setInput(q)}
+                      className="text-xs bg-white border border-slate-200 px-3 py-1 rounded-full hover:border-blue-400 hover:text-blue-600 transition-all"
+                    >
+                      {q}
+                    </button>
+                  ))}
                 </div>
-                <h3 className="text-base font-bold text-slate-900 mb-1">{f.title}</h3>
-                <p className="text-sm text-slate-500 leading-relaxed">{f.description}</p>
               </div>
-            ))}
-          </div>
-        </section>
+            )}
 
-        {/* ── Category Legend ── */}
-        <section className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8">
-          <h2 className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-6">Review Categories</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {CATEGORIES.map((cat) => (
-              <div
-                key={cat.label}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors"
-              >
+            {messages.map((m, i) => (
+              <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div
-                  className="w-3 h-3 rounded-full shrink-0"
-                  style={{ backgroundColor: cat.color }}
-                />
-                <span className="text-lg mr-1">{cat.icon}</span>
-                <span className="text-sm font-medium text-slate-700">{cat.label}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── Quick Start Steps ── */}
-        <section>
-          <h2 className="text-center text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-8">Get Started in 3 Steps</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {STEPS.map((s, i) => (
-              <div key={s.step} className="relative text-center">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-slate-900 text-white mb-4 shadow-lg">
-                  <s.icon size={22} />
+                  className={`max-w-[85%] p-3 rounded-2xl text-sm ${
+                    m.role === 'user'
+                      ? 'bg-blue-600 text-white rounded-tr-none'
+                      : 'bg-white text-slate-700 shadow-sm border border-slate-100 rounded-tl-none'
+                  }`}
+                >
+                  <div className="flex items-center gap-1 mb-1 opacity-70">
+                    {m.role === 'user' ? <User size={12} /> : <Bot size={12} />}
+                    <span className="text-[10px] uppercase font-bold tracking-wider">{m.role}</span>
+                  </div>
+                  <p className="whitespace-pre-wrap">{m.content}</p>
                 </div>
-                <div className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Step {s.step}</div>
-                <h3 className="text-lg font-bold text-slate-900">{s.label}</h3>
-                <p className="text-sm text-slate-500 mt-1">{s.desc}</p>
-                {i < STEPS.length - 1 && (
-                  <ArrowRight size={18} className="hidden md:block absolute top-7 -right-3 text-slate-300" />
-                )}
               </div>
             ))}
-          </div>
-        </section>
 
-      </div>
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm border border-slate-100">
+                  <Loader2 size={16} className="animate-spin text-blue-600" />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="p-3 md:p-4 border-t bg-white">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSend()}
+                placeholder="Type a message..."
+                className="flex-1 bg-slate-100 border-none rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none"
+              />
+              <button
+                onClick={handleSend}
+                disabled={isLoading || !input.trim()}
+                className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white p-2 rounded-lg transition-colors"
+              >
+                <Send size={18} />
+              </button>
+            </div>
+            <p className="text-[10px] text-slate-400 mt-2 text-center">
+              AI can make mistakes. Consult a doctor.
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="bg-blue-600 hover:bg-blue-700 text-white p-3.5 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center md:p-4"
+      >
+        {isOpen ? <X size={24} /> : <MessageSquare size={24} />}
+      </button>
     </div>
   );
 };

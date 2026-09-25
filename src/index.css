@@ -1,6 +1,16 @@
-@import "tailwindcss"; /* The v4 way to load all styles */
+@import "tailwindcss";
 
-/* Add this to match your sidebar's custom scrollbar logic */
+html, body, #root {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+  background: #f8fafc;
+}
+
+body {
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
 @layer utilities {
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
@@ -8,5 +18,11 @@
   .custom-scrollbar::-webkit-scrollbar-thumb {
     background: #334155;
     border-radius: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  html, body, #root {
+    overflow-x: hidden;
   }
 }
